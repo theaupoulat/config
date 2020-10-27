@@ -1,3 +1,3 @@
-# Configuration files
+# Neovim config
 
-My configuration files for some tools I use
+This config tries to emulate the good parts of the VS Code experience, minus the lag
