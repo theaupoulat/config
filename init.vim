@@ -15,11 +15,16 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'ryanoasis/vim-devicons'
-Plug 'Yggdroot/indentLine'
 Plug 'metakirby5/codi.vim'
-Plug 'junegunn/goyo.vim'
-Plug 'dense-analysis/ale'
-Plug 'Shougo/deoplete.nvim', {'do': ':UpdateRemotePlugins'}
+"Plug 'dense-analysis/ale'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'heavenshell/vim-jsdoc', { 
+  \ 'for': ['javascript', 'javascript.jsx','typescript'], 
+  \ 'do': 'make install'
+\}
+
+
+"Plug 'Shougo/deoplete.nvim', {'do': ':UpdateRemotePlugins'}
 call plug#end()
 
 syntax enable " Syntax higlighting
@@ -77,22 +82,73 @@ let g:fzf_colors =
 " Deoplete
 let g:deoplete#enable_at_startup = 1
 
-" Remaps
+" Remaps 
 nmap <leader>kk :NERDTreeToggle<CR>
 nmap <leader>nf :NERDTreeFind<CR>
 nmap <leader>pp :GFiles<CR>
 nmap <leader>ff :Ag<CR>
 nmap <leader>vs :vsplit<CR>
 nmap <leader>hs :split<CR>
-nmap <leader>qq :close<CR>
+nmap <leader>qq :bd<CR>
+" copy to system clipboard
+nmap <Leader>y "*y
+" paste from system clipboard
+nmap <Leader>p "*p
+" lists registers
+nmap <Leader>rl :registers<CR>
 
-let g:ale_fixers = {
-\   'javascript': ['prettier'],
-\   'css': ['prettier'],
-\}
+" Conquer of Completion setup
+let g:coc_global_extensions = [
+  \ 'coc-tsserver',
+  \ 'coc-flow'
+  \ ]
+ "activtes prettier and eslint for project that have it installed
+if isdirectory('./node_modules') && isdirectory('./node_modules/prettier')
+  let g:coc_global_extensions += ['coc-prettier']
+endif
 
-let g:ale_linters_explicit = 1
-let g:ale_fix_on_save = 1
+if isdirectory('./node_modules') && isdirectory('./node_modules/eslint')
+  let g:coc_global_extensions += ['coc-eslint']
+endif
+
+" automatic doc display
+function! ShowDocIfNoDiagnostic(timer_id)
+  if (coc#float#has_float() == 0)
+    silent call CocActionAsync('doHover')
+  endif
+endfunction
+
+function! s:show_hover_doc()
+  call timer_start(500, 'ShowDocIfNoDiagnostic')
+endfunction
+
+autocmd CursorHoldI * :call <SID>show_hover_doc()
+autocmd CursorHold * :call <SID>show_hover_doc()
+
+" bindings
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> vgd :call CocAction('jumpDefinition', 'vsplit')<cr>
+nmap <silent> hgd :call CocAction('jumpDefinition', 'split')<cr>
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gr <Plug>(coc-references)
+nnoremap <silent> <space>d :<C-u>CocList diagnostics<cr>
+nmap <leader>do <Plug>(coc-codeaction)
+nnoremap <silent> <space>s :<C-u>CocList -I symbols<cr>
+nmap <leader>rn <Plug>(coc-rename)
+" remaps <CR> for correct use in auto complete
+
+inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
+nnoremap <silent> K :call CocAction('doHover')<CR>
+" use <tab> for trigger completion and navigate to the next complete item
+function! s:check_back_space() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~ '\s'
+endfunction
+
+inoremap <silent><expr> <Tab>
+      \ pumvisible() ? "\<C-n>" :
+      \ <SID>check_back_space() ? "\<Tab>" :
+      \ coc#refresh()
 
 
 
@@ -101,3 +157,4 @@ let g:ale_fix_on_save = 1
 :set nu rnu
 
 au! BufWritePost $MYVIMRC source %
+
